@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block css %}
+<style>
+.rank-list
+ li { margin: 0 5px 5px 5px; padding: 5px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<form id="rank_form">
+<input type="submit" id="submit" value="submit" />
+<input type="submit" id="reset" value="reset" />
+{% csrf_token %}
+</form>
+<div id="tabs">
+  <ul>
+    <li><a href="#tabs-ranking">Rankings</a></li>
+    <li><a href="#tabs-exclude">Exclude</a></li>
+  </ul>
+  <div id="tabs-ranking">
+    <h2>
+      Pre-Draft Rankings
+    </h2>
+    <ul id="ranking" class="rank-list ui-helper-reset">
+      {% for pick in predraft_picks %}
+      <li class="ui-state-default" id="{{ pick.id }}">
+	{{ pick.player.full_name }}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div id="tabs-exclude">
+    <h2>
+      Exclude Players
+    </h2>
+    <ul id="exclude" class="rank-list ui-helper-reset">
+      {% for pick in exclude_picks %}
+      <li class="ui-state-default" id="{{ pick.id }}">
+	{{ pick.player.full_name }}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_js %}
+$(function() {
+  $(".rank-list").sortable();
+  $(".rank-list").disableSelection();
+  //$(".rank-list").droppable();
+
+  var $tabs = $("#tabs").tabs();
+
+  var $tab_items = $( "ul:first li", $tabs ).droppable({
+    accept: ".rank-list li",
+    hoverClass: "ui-state-hover",
+    drop: function( event, ui ) {
+      var $item = $( this );
+      var $list = $( $item.find( "a" ).attr( "href" ) )
+        .find( ".rank-list" );
+
+      ui.draggable.hide( "slow", function() {
+        $tabs.tabs( "select", $tab_items.index( $item ) );
+        $( this ).appendTo( $list ).show( "slow" );
+      });
+    }
+  });
+
+  $("#submit").click(function(){
+    var csrf_token = $("#rank_form input[name='csrfmiddlewaretoken']");
+    var ranking_list = $("#ranking li").map(function(){return this.id}).get();
+    var exclude_list = $("#exclude li").map(function(){return this.id}).get();
+    $.post("{% url gm_rank %}",
+           {'csrfmiddlewaretoken':csrf_token.val(),
+            'ranking_list[]':ranking_list,
+            'exclude_list[]':exclude_list},
+           function(data){
+             
+           });
+    return false;
+  });
+
+  $("#reset").click(function(){
+    var csrf_token = $("#rank_form input[name='csrfmiddlewaretoken']");
+    $.post("{% url gm_rank %}",
+           {'reset':"true",
+            'csrfmiddlewaretoken':csrf_token.val()},
+           function(data){
+             window.location.reload();
+           });
+    return false;
+  });
+});
+
+</script>
+{% endblock %}

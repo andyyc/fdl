@@ -1,0 +1,94 @@
+import sys, os
+sys.path.append(os.path.abspath('..'))
+
+import psycopg2
+import csv
+from stats.models import PlayerGameStats, PassingStats, ReceivingStats, RushingStats, Game, Team, Player
+
+class GameLoader:
+    def __init__(self, host, user, passwd, db):
+        self.host=host
+        self.user=user
+        self.passwd=passwd
+        self.db=db
+    
+    def load_file(self, filename):
+        f = open(filename, 'rU')
+        reader = csv.reader(f)
+        for row in reader:
+            if row[0] == '':
+                continue
+
+            full_name = row[0]
+            team_name = row[1]
+
+            try:
+                team = Team.objects.get(name=team_name)
+                player = Player.objects.get(full_name=full_name,team=team)
+            except:
+                continue
+
+            for i in xrange(2, len(row)):
+                if row[i] == '':
+                    row[i] = 0
+            passing_cmp = row[2]
+            passing_att = row[3]
+            passing_yds = row[4]
+            passing_td = row[5]
+            passing_ints = row[6]
+            rushing_att = row[8]
+            rushing_yds = row[9]
+            rushing_td = row[10]
+            receiving_rec = row[12]
+            receiving_yds = row[13]
+            receiving_td = row[14]
+            
+            game, gcreated = Game.objects.get_or_create(week=1)
+            pass_stats = PassingStats.objects.create(
+                completions=passing_cmp,
+                attempts=passing_att,
+                yards=passing_yds,
+                touchdowns=passing_td,
+                interceptions=passing_ints)
+            rec_stats = ReceivingStats.objects.create(
+                receptions=receiving_rec,
+                yards=receiving_yds,
+                touchdowns=receiving_td)
+            rush_stats = RushingStats.objects.create(
+                attempts=rushing_att,
+                yards=rushing_yds,
+                touchdowns=rushing_td)
+            try:
+                pgs = PlayerGameStats.objects.get(player=player,
+                                                  game=game)
+                pgs.passing_stats = pass_stats
+                pgs.receiving_stats = rec_stats
+                pgs.rushing_stats = rush_stats
+            except:
+                PlayerGameStats.objects.get_or_create(
+                    player=player,
+                    game=game,
+                    passing_stats=pass_stats,
+                    receiving_stats=rec_stats,
+                    rushing_stats=rush_stats)
+            """
+            if rownum > 1:
+                csv_full_name = row[1]
+                csv_age = row[3]
+                csv_team = row[2]
+                csv_pos = row[17]
+                team, tcreated = Team.objects.get_or_create(name=csv_team)
+                if tcreated:
+                    print team
+                player, pcreated = Player.objects.get_or_create(full_name=csv_full_name, 
+                                                      position=csv_pos,
+                                                      age=csv_age,
+                                                      team=team)
+                if pcreated:
+                    print player
+
+            rownum += 1
+            """
+
+        f.close()
+

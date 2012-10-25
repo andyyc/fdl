@@ -1,0 +1,97 @@
+{% extends "league/league_base.html" %}
+
+{% block team_tab_class %}active{% endblock %}
+
+{% block content %}
+<h1>
+  {{ gm.name }}
+</h1>
+<div>
+  <h2>Lineup</h2>
+  <table class="table table-striped table-bordered">
+    <tr>
+      <th rowspan=2>
+	Pos
+      </th>
+      <th rowspan=2>
+	Player
+      </th>
+      <th colspan=3>
+	Passing
+      </th>
+      <th colspan=2>
+	Rushing
+      </th>
+      <th colspan=3>
+	Receiving
+      </th>
+      <th rowspan=2>
+	Pts
+      </th>
+    </tr>
+    <tr>
+      <th>
+	Yds
+      </th>
+      <th>
+	TD
+      </th>
+      <th>
+	Int
+      </th>
+      <th>
+	Yds
+      </th>
+      <th>
+	TD
+      </th>
+      <th>
+	Rec
+      </th>
+      <th>
+	Yds
+      </th>
+      <th>
+	TD
+      </th>
+    </tr>
+    {% for roster_player, pgs, fan_pts in roster_players_and_stats %}
+    <tr>
+      <td>
+	{{ roster_player.position }}
+      </td>
+      <td>
+	{{ roster_player.player.full_name }}
+      </td>
+      <td>
+	{{ pgs.pass_yds }}
+      </td>
+      <td>
+	{{ pgs.pass_td }}
+      </td>
+      <td>
+	{{ pgs.pass_int }}
+      </td>
+      <td>
+	{{ pgs.rush_yds }}
+      </td>
+      <td>
+	{{ pgs.rush_td }}
+      </td>
+      <td>
+	{{ pgs.rec_rec }}
+      </td>
+      <td>
+	{{ pgs.rec_yds }}
+      </td>
+      <td>
+	{{ pgs.rec_td }}
+      </td>
+      <td>
+	{{ roster_player.get_fan_pts }}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

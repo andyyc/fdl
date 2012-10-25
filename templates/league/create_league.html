@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>
+  Create League
+</h1>
+<div>
+  <form action="" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" name="create_league" value="Create" />
+  </form>
+</div>
+<h1>
+  Join League
+</h1>
+<div>
+  <form action="" method="POST">
+    {% csrf_token %}
+    {{ join_form.as_p }}
+    <input type="submit" name="join_league" value="Join" />
+  </form>
+</div>
+{% endblock %}

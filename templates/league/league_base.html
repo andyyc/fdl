@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block subnav %}
+<ul class="nav nav-tabs">
+  <li class="{% block standings_tab_class %}{% endblock %}">
+    <a href="{% url league_home league.lid %}">Standings</a>
+  </li>
+  <li class="{% block team_tab_class %}{% endblock %}">
+    <a href="{% url team_home league.lid %}">Team</a>
+  </li>
+  <li class="{% block chat_tab_class %}{% endblock %}">
+    <a href="{% url league_chat league.lid %}">Chat</a>
+  </li>
+</ul>
+{% endblock %}

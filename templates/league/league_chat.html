@@ -1,0 +1,33 @@
+{% extends "league/league_base.html" %}
+
+{% block chat_tab_class %}active{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/chat.css">
+{% endblock %}
+
+{% block content %}
+    <div id="body">
+      <div id="inbox">
+        {% for message in messages %}
+          {% include "league/league_chat_message.html" %}
+        {% endfor %}
+      </div>
+      <div id="input">
+        <form action="/chat/a/message/new" method="post" id="messageform">
+          <table>
+            <tr>
+              <td><input name="body" id="message" style="width:500px"/></td>
+              <td style="padding-left:5px">
+                <input type="submit" value="Post"/>
+              </td>
+            </tr>
+          </table>
+        </form>
+      </div>
+    </div>
+{% endblock %}
+
+{% block footer_js %}
+    <script src="{{ STATIC_URL }}js/chat.js" type="text/javascript"></script>
+{% endblock %}
