@@ -1,9 +1,0 @@
-{% extends "league/league_chat.html" %}
-
-{% block css %}
-<link rel="stylesheet" type="text/css" href="mystyle.css">
-{% endblock %}
-
-{% block content %}
-
-{% endblock %}
