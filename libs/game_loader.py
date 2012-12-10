@@ -3,7 +3,7 @@ sys.path.append(os.path.abspath('..'))
 
 import psycopg2
 import csv
-from stats.models import PlayerGameStats, Game, Team, Player
+from stats.models import PlayerGameStats, Game, Team, Player, Week
 from datetime import datetime
 import urllib2
 from bs4 import BeautifulSoup, NavigableString
@@ -89,7 +89,8 @@ class GameLoader:
                 away_team = team2
 
             game_date = datetime.strptime(game_date, "%Y-%m-%d")
-            game, gcreated = Game.objects.get_or_create(week=week,
+            week_obj, wcreated = Week.objects.get_or_create(num=week)
+            game, gcreated = Game.objects.get_or_create(week=week_obj,
                                               datetime=game_date,
                                               away_team=away_team,
                                               home_team=home_team)

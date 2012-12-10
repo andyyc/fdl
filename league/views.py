@@ -6,8 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from league.forms import JoinLeagueForm, LeagueForm, GeneralManagerForm
-from league.models import League, LeagueTeam, GeneralManager, PredraftPick, RosterSettings, ScoringSettings, WeeklyRoster, RosterPlayer
-from stats.models import Player, Game, PlayerGameStats
+from league.models import League, LeagueTeam, GeneralManager, PredraftPick, RosterSettings, ScoringSettings, WeeklyRoster, RosterPlayer, LeagueWeek
+from stats.models import Player, Game, PlayerGameStats, Week
 from draft.models import Draft, DraftOrder, Pick
 from bloop import settings
 import random
@@ -22,9 +22,11 @@ def draft_league(request, lid):
     
     if request.method == 'POST':
         lteams = league.leagueteam_set.all()
-        draft = Draft.objects.create(league=league, 
+        draft = Draft.objects.create(league_week=league.current_week, 
                                      current_round=1, 
                                      current_pick_num=1)
+        league.current_week.status = LeagueWeek.DRAFTING
+        league.current_week.save()
         lteams = list(lteams)
         random.shuffle(lteams)
         for lteam in lteams:
@@ -65,6 +67,8 @@ def draft_league(request, lid):
                 draft.current_round += 1
                 
             draft.save()
+            league.current_week.status = LeagueWeek.DRAFTED
+            league.current_week.save()
             
     return HttpResponse("ok")
 
@@ -75,11 +79,20 @@ def league_home(request, lid):
     except ObjectDoesNotExist:
         raise Http404
 
-    lteams = league.leagueteam_set.all()
+    current_week = 1
+    lteams = list(league.leagueteam_set.all())
+    
+    for lteam in lteams:
+        if lteam.roster != None:
+            lteam.fan_pts = lteam.roster.get_fan_pts()
+
+    if False:
+        lteams.sort(key=lambda lteam: lteam.fan_pts, reverse=True)
 
     return render_to_response("league/league_home.html",
                               {'lteams':lteams,
                                'league':league,
+                               'LeagueWeek':LeagueWeek
                                },
                               context_instance=RequestContext(request))
 
@@ -173,9 +186,15 @@ def create_league(request):
                                                    )
                 league.roster_settings = rs
                 ss = ScoringSettings.objects.create()
-                league.scoring_settings = ss   
+                league.scoring_settings = ss
+                week = Week.objects.get(num=settings.CURRENT_WEEK)
                 league.save()
-                lteam, created = LeagueTeam.objects.get_or_create(league=league,gm=gm)
+                league_week = LeagueWeek.objects.create(league=league,
+                                                        week=week,
+                                                        status = LeagueWeek.PREDRAFT)
+                league.current_week = league_week
+                league.save()
+                create_league_team(gm, league)
                 return redirect('team_home', lid=league.lid)
         elif 'join_league' in request.POST:
             join_form = JoinLeagueForm(request.POST)
@@ -187,7 +206,7 @@ def create_league(request):
                 except ObjectDoesNotExist:
                     exists = False
                 if exists:
-                    lteam, created = LeagueTeam.objects.get_or_create(gm=gm, league=league)
+                    create_league_team(gm, league)
                     return redirect('team_home', lid=league.lid)
                 
     
@@ -195,6 +214,9 @@ def create_league(request):
                               {'form':form,
                                'join_form':join_form},
                               context_instance=RequestContext(request))
+
+def create_league_team(gm, league):
+    lteam, created = LeagueTeam.objects.get_or_create(league=league,gm=gm)
 
 @login_required
 def gm_rank(request):
@@ -249,8 +271,17 @@ def team_home(request, lid):
     roster_players_and_stats = []
     if roster_players != None:
         games = Game.objects.all()
-        ss = league.scoring_settings
-        for rplayer in roster_players:
+        ord_roster_players = []
+        ord_roster_players += roster_players.filter(position=RosterPlayer.Q)
+        ord_roster_players += roster_players.filter(position=RosterPlayer.R)
+        ord_roster_players += roster_players.filter(position=RosterPlayer.W)
+        ord_roster_players += roster_players.filter(position=RosterPlayer.T)
+        ord_roster_players += roster_players.filter(position=RosterPlayer.K)
+        ord_roster_players += roster_players.filter(position=RosterPlayer.D)
+        ord_roster_players += roster_players.filter(position=RosterPlayer.WT)
+        ord_roster_players += roster_players.filter(position=RosterPlayer.WR)
+        ord_roster_players += roster_players.filter(position=RosterPlayer.WRT)
+        for rplayer in ord_roster_players:
             try:
                 pgs = PlayerGameStats.objects.get(player=rplayer.player,game__in=games)
             except:
@@ -287,8 +318,7 @@ def create_gm(request):
             gm.save()
             if not exists:
                 init_predraft_list(gm)
-
-            return HttpResponse('GeneralManager Created')
+            return redirect('gm_home')
     else:
         if gm == None:
             form = GeneralManagerForm()

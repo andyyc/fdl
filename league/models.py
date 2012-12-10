@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from stats.models import Player, Game, PlayerGameStats
+from stats.models import Player, Game, PlayerGameStats, Week
 
 class GeneralManager(models.Model):
     user = models.ForeignKey(User)
@@ -17,11 +17,12 @@ class League(models.Model):
     draft_settings = models.OneToOneField('DraftSettings', null=True)
     roster_settings = models.OneToOneField('RosterSettings', null=True)
     scoring_settings = models.OneToOneField('ScoringSettings', null=True)
-    current_week = models.ForeignKey('LeagueWeek', null=True)
+    current_week = models.ForeignKey('LeagueWeek', null=True, related_name="+")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     commissioner = models.ForeignKey(GeneralManager, related_name="+")
     managers = models.ManyToManyField(GeneralManager, through="LeagueTeam")
+    #status = models.CharField(max_length=1)
 
 class LeagueSettings(models.Model):
     max_gms = models.PositiveSmallIntegerField()
@@ -59,8 +60,7 @@ class ScoringSettings(models.Model):
 class LeagueTeam(models.Model):
     league = models.ForeignKey(League)
     gm = models.ForeignKey(GeneralManager)
-    roster = models.ForeignKey('WeeklyRoster', null=True)
-        
+    roster = models.ForeignKey('WeeklyRoster', null=True)        
 
 class WeeklyRoster(models.Model):
     league_team = models.ForeignKey(LeagueTeam)
@@ -69,10 +69,8 @@ class WeeklyRoster(models.Model):
     
     def get_fan_pts(self):
         rplayers = self.rosterplayer_set.all()
-        print rplayers
         total = 0
         for rplayer in rplayers:
-            print rplayer.id
             total += rplayer.get_fan_pts()
         return total
 
@@ -143,10 +141,22 @@ class Match(models.Model):
 """
  
 class LeagueWeek(models.Model):
-    start_datetime = models.DateTimeField()
-    end_datetime = models.DateTimeField()
-    games = models.ManyToManyField(Game)
+    PREDRAFT = '0'
+    DRAFTING = '1'
+    DRAFTED = '2'
+    END = '3'
+
+    LEAGUE_STATUS_CHOICES = (
+        (PREDRAFT, 'PREDRAFT'),
+        (DRAFTING, 'DRAFTING'),
+        (DRAFTED, 'DRAFTED'),
+        (END, 'END'),
+        )
+    
+    league = models.ForeignKey(League)
+    week = models.ForeignKey(Week)
     winner = models.ForeignKey(LeagueTeam, null=True)
+    status = models.CharField(max_length=1, choices=LEAGUE_STATUS_CHOICES)
 
 class PredraftPick(models.Model):
     gm = models.ForeignKey(GeneralManager)

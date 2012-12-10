@@ -1,9 +1,9 @@
 from django.db import models
 from stats.models import Player
-from league.models import League, LeagueTeam
+from league.models import League, LeagueTeam, LeagueWeek
 
 class Draft(models.Model):
-    league = models.ForeignKey(League)
+    league_week = models.OneToOneField(LeagueWeek)
     current_round = models.PositiveIntegerField()
     current_pick_num = models.PositiveIntegerField()
     picks = models.ManyToManyField(Player, through="Pick")

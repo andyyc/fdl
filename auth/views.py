@@ -16,7 +16,7 @@ def login(request):
     error = None
 
     if request.user.is_authenticated():
-        return HttpResponseRedirect(reverse('home'))
+        return HttpResponseRedirect(reverse('gm_home'))
 
     if request.GET:
         if 'code' in request.GET:
@@ -44,7 +44,7 @@ def login(request):
             if user:
                 if user.is_active:
                     auth.login(request, user)
-                    return HttpResponseRedirect(reverse('create_gm'))
+                    return HttpResponseRedirect(reverse('gm_home'))
                 else:
                     error = 'AUTH_DISABLED'
             else:
@@ -58,4 +58,4 @@ def login(request):
 
 def logout_view(request):
     logout(request)
-    return HttpResponseRedirect(reverse('home'))
+    return HttpResponseRedirect(reverse('gm_home'))

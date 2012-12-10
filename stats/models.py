@@ -93,7 +93,11 @@ class PlayerGameStats(PlayerStats):
     
     
 class Game(models.Model):
-    week = models.PositiveIntegerField()
+    week = models.ForeignKey('Week')
     datetime = models.DateTimeField()
     away_team = models.ForeignKey(Team, related_name="away_games")
     home_team = models.ForeignKey(Team, related_name="home_games")
+
+class Week(models.Model):
+    num = models.PositiveSmallIntegerField()
+    

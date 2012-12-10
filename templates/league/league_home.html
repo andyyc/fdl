@@ -21,7 +21,7 @@
       {{ lteam.gm.name }}
     </td>
     <td>
-      {{ lteam.roster.get_fan_pts }}
+      {{ lteam.fan_pts }}
     </td>
   </tr>
   {% endfor %}
@@ -35,8 +35,10 @@
   </div>
   {% endfor %}
 </div>
+{% if league.current_week.status == LeagueWeek.PREDRAFT %}
 <form action="{% url draft_league league.lid %}" method="post">
   {% csrf_token %}
   <input type="submit" value="Draft" />
 </form>
+{% endif %}
 {% endblock %}
