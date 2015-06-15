@@ -79,7 +79,7 @@ STATICFILES_FINDERS = (
 )
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = '+0sqtvht5zt-b$6)25jitiyqag3q@a--_@5m@va22_70xc%oft'
+SECRET_KEY = 'asdf'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -173,6 +173,6 @@ AUTHENTICATION_BACKENDS = (
 
 #Espn API
 ESPN_API_KEY = 'v92mvbuz5j54d6mx9gfpqejd'
-ESPN_API_SECRET = 'urWcSUWNhAXAEgWGHH6NUUw6'
+ESPN_API_SECRET = 'asdf'
 
 CURRENT_WEEK = 1
